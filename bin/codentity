@@ -1,0 +1,136 @@
+#!/usr/bin/env node
+
+'use strict';
+
+let q = require('q');
+let program = require('commander');
+let pkg = require('../package');
+let FileLoader = require('../lib/helpers/FileLoader');
+let FilePath = require('../lib/helpers/FilePath');
+let Codentity = require('../lib/Codentity');
+let recursive = require('recursive-readdir');
+let request = require('request');
+let packageJson = require('../package');
+
+const CODENTITY_REGISTRY = "https://codentity.herokuapp.com";
+
+program
+.version(packageJson.version)
+.option('-r, --registry [string]', `Set package registry URL [${CODENTITY_REGISTRY}]`)
+.option('-s, --summary', `Provide a summary of your results`)
+.parse(process.argv);
+
+// ignore files named 'foo.cs' or files that end in '.html'.
+let baseDirectory = process.cwd();
+
+let fl = FileLoader.base(baseDirectory);
+let fp = FilePath.base(baseDirectory);
+
+function loadFilePaths () {
+  let deferred = q.defer();
+  recursive(baseDirectory, function (err, filePaths) {
+    if (err) deferred.reject(err);
+    deferred.resolve(filePaths);
+  });
+  return deferred.promise;
+}
+
+function getFilesPaths () {
+  return loadFilePaths().then(function (filePaths) {
+    return {
+      key: 'filePaths',
+      value: filePaths
+    };
+  });
+}
+
+function getBowerrc () {
+  return fl.load('.bowerrc').then(function (bowerrc) {
+    return {
+      key: 'bowerrc',
+      value: bowerrc
+    };
+  });
+}
+
+function getBowerJson () {
+  return fl.load('bower.json').then(function (bowerJson) {
+    return {
+      key: 'bowerJson',
+      value: JSON.parse(bowerJson)
+    };
+  });
+}
+
+function getPackageJson () {
+  return fl.load('package.json').then(function (packageJson) {
+    return {
+      key: 'packageJson',
+      value: JSON.parse(packageJson)
+    };
+  });
+}
+
+function getGitignore () {
+  return fl.load('.gitignore').then(function (gitignore) {
+    return {
+      key: 'gitignore',
+      value: gitignore
+    };
+  });
+}
+
+function getPackages () {
+  var registryUrl = program.registry || CODENTITY_REGISTRY;
+  var deferred = q.defer();
+  request({
+    method: 'GET',
+    url: `${registryUrl}/packages`,
+    json: true,
+    headers: {
+      'version': packageJson.version
+    }
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      return deferred.resolve({
+        key: 'packages',
+        value: body
+      });
+    }
+    console.log(error.message || body.message);
+    process.exit(1);
+  });
+  return deferred.promise;
+}
+
+q.allSettled([
+  getPackages(),
+  getFilesPaths(),
+  getBowerrc(),
+  getBowerJson(),
+  getPackageJson(),
+  getGitignore()
+])
+.then(function (results) {
+  let config = {};
+  results.forEach(function (result) {
+    if (result.state !== 'fulfilled') return;
+    config[result.value.key] = result.value.value;
+  });
+  return config;
+})
+.then(function (config) {
+  config.baseDirectory = baseDirectory;
+  config.filePaths = fp.relative(config.filePaths);
+  let result = new Codentity(config).analyze();
+  if (program.summary) {
+    Object.keys(result).sort().map(function (r) {
+      console.log(`${r}   ${result[r].length}`);
+    });
+  } else {
+    console.log(JSON.stringify(result, true, 2));
+  }
+})
+.catch(function (err) {
+  console.error(err.stack);
+});
