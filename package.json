@@ -1,6 +1,6 @@
 {
   "name": "codentity",
-  "version": "0.0.0-pre6",
+  "version": "0.0.0-pre7",
   "description": "Dependency analysis, gone wild.",
   "main": "lib/Codentity.js",
   "directories": {
