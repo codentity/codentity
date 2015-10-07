@@ -11,6 +11,7 @@ let Codentity = require('../lib/Codentity');
 let recursive = require('recursive-readdir');
 let request = require('request');
 let packageJson = require('../package');
+let Table = require('easy-table');
 
 const CODENTITY_REGISTRY = "https://codentity.herokuapp.com";
 
@@ -122,13 +123,17 @@ q.allSettled([
 .then(function (config) {
   config.baseDirectory = baseDirectory;
   config.filePaths = fp.relative(config.filePaths);
-  let result = new Codentity(config).analyze();
+  let results = new Codentity(config).analyze();
   if (program.summary) {
-    Object.keys(result).sort().map(function (r) {
-      console.log(`${r}   ${result[r].length}`);
+    var t = new Table
+    Object.keys(results).forEach(function(pkgId) {
+      t.cell('Package', pkgId)
+      t.cell('Matches', results[pkgId].length)
+      t.newRow();
     });
+    console.log(t.print());
   } else {
-    console.log(JSON.stringify(result, true, 2));
+    console.log(JSON.stringify(results, true, 2));
   }
 })
 .catch(function (err) {
