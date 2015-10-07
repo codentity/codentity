@@ -1,6 +1,10 @@
 # codentity
 
-[![Circle CI](https://circleci.com/gh/codentity/codentity.svg?style=svg&circle-token=98a93a7c59c5ffe8a00a7fa53f9b5e365e8129e8)](https://circleci.com/gh/codentity/codentity)
+[![Build Status](https://travis-ci.org/codentity/codentity.svg)](https://travis-ci.org/codentity/codentity)
+
+[![Code Climate](https://codeclimate.com/github/codentity/codentity/badges/gpa.svg)](https://codeclimate.com/github/codentity/codentity)
+
+[![Test Coverage](https://codeclimate.com/github/codentity/codentity/badges/coverage.svg)](https://codeclimate.com/github/codentity/codentity/coverage)
 
 Dependency analysis, gone wild.
 
