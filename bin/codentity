@@ -2,15 +2,17 @@
 
 'use strict';
 
-let program = require('commander');
-let CodentityCli = require('../lib/CodentityCli');
-let appVersion = require('../package').version;
+const program = require('commander');
+const version = require('../package').version;
+const CodentityCli = require('../lib/cli/codentity-cli');
 
 program
-.version(appVersion)
-.option('-r, --registry [string]', `Set package registry URL`)
-.option('-f, --format [string]', `Provide a summary of your results`)
-.option('-d, --directory [string]', `Set the directory you want to analyze`)
+.version(version)
+.option('-d, --directory [value]', `Set the directory you want to analyze`)
+.option('-p, --plugins <items>', `Specify plugins you want to use`)
+.option('-k, --packages [value]', `Local package file to use (must be JSON)`)
+.option('-r, --registry [value]', `Set package registry URL`)
+.option('-f, --format [value]', `Provide a summary of your results`)
 .parse(process.argv);
 
 CodentityCli.run(program);

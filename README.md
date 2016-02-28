@@ -23,9 +23,3 @@ codentity
 ```
 
 This will output a JSON report of your package dependencies.
-
-To get a summary, instead of the entire JSON report, run:
-
-```
-codentity --summary
-```
